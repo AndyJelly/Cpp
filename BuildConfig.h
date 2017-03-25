@@ -41,3 +41,15 @@
 #endif
 
 #endif // __BASE_BUILDCONFIG_H__
+
+//新增导出类的定义格式
+#ifndef __BASE_GLOBAL_H__
+#define __BASE_GLOBAL_H__
+
+#ifdef BASE_LIB_EXPORT_API
+# define BASE_LIB_EXPORT __declspec(dllexport)
+#else
+# define BASE_LIB_EXPORT __declspec(dllimport)
+#endif
+
+#endif // __BASE_GLOBAL_H__
