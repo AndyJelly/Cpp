@@ -108,5 +108,101 @@ void share_print(std::string msg, int id)
         std::lock_guard<std::mutex> locker2(m_mutex2, std::adopt_lock);
 此时在构造lock_guard对象时，需要传入另外一个参数。
 
+5、使用unique_lock加锁
+（1）、只对部分代码进行加锁
+        std::unique_lock<std::mutex> locker(m_mutex);
+        std::cout << "From " << msg << " : " << id << std::endl;
+        locker.unlock();
+（2）、延迟锁定，在构造的时候，传入std::defer_lock即可
+        std::unique_lock<std::mutex> locker(m_mutex,std::defer_lock);
+        //...do something 
+        locker.lock();
+        std::cout << "From " << msg << " : " << id << std::endl;
+        locker.unlock();
+（3）、unique_lock在unlock之后，还可以再次被lock
+
+（4）、lock_guard/unique_lock都不可以被复制，unique_lock可以被移动，一旦unique_lock被move之后，那么mutex的控制权也将会响应的转移
+unique_lock消耗更多的计算机性能。
+
+
+6、
+        if (!m_f.is_open())
+        {
+            std::unique_lock<std::mutex> locker(m_mutex_open, std::defer_lock);
+            m_f.open("log.txt");
+        }
+这段并非绝对的线程安全；一个线程A到来，文件未被打开，锁住并打开文件；同时线程B到来时，文件还未被打开，进入if语句块；同时线程A打开了文件，并离开if语句块，
+此时就会释放mutex的使用权；刚好线程B试图获取mutex的使用权；此时刚好获取成功，又会打开一次文件。换成如下
+
+        {
+            std::unique_lock<std::mutex> locker(m_mutex_open, std::defer_lock);
+            if (!m_f.is_open())
+            {
+                m_f.open("log.txt");
+            }
+        }
+也可以使用标准库提供的std::once_flag 和std::call_once，以及Lambda函数实现
+std::once_flag m_flag;
+std::call_once(m_flag, [&](){m_f.open("log.txt"); });
+
+
+三、条件变量
+1、使用条件变量等待
+（1）、条件变量，wait的时候不，需要对mutex多次加解锁，所以只能使用unique_lock变量作为参数传递进去；
+（2）、wait的时候，可以增加一个Lambda函数作为参数传进去，当Lambda函数返回失败时，将会一直等待。
+void function3()
+{
+    int data = 0;
+    while (data != 1)
+    {
+        std::unique_lock<std::mutex> locker(mu);
+        cond.wait(locker, [](){return !q.empty(); });  //wait函数内会解锁mutex对象，这里需要重复的加解锁，所以只能使用unique_lock；同时这里也会出现伪激活（自己激活自己），可以在wait增加一个lambda函数,当q为空时，将会一直等待下去
+
+        data = q.back();  //取出最后一个元素值
+        q.pop_back();  //弹出最后一个元素
+        locker.unlock();
+        std::cout << "t2 got a value from t1: " << data << std::endl;
+    }
+}
+
+四、Future、Promise子线程和父线程之间数据的传递
+父线程中获取子线程中的变量
+    int x;
+    std::future<int> fu = std::async(std::launch::deferred,factorial, 4);
+    x = fu.get();
+（1）、future的get函数将会等待子线程执行结束，并获取子线程的返回值；同时get只能被调用一次，否则会出现崩溃
+（2）、使用std::async构造std::future对象，并不一定会立即起子线程；取决于构造时的第一个参数，如果第一个参数是std::launch::deferred，则会一直等到get被
+调用时才会去执行函数factorial，并返回factorial的执行结果，此时在同一个线程中执行factorial；
+如果第一个参数是std::launch::async，则会另起一个线程执行factorial；
+
+子线程中获取父线程中的变量
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+    std::future<int> fu = std::async(std::launch::async,factorial, std::ref(f));	//子线程从父线程中拿数据
+    p.set_value(4);
+    x = fu.get();	//父线程从子线程中拿数据
+（1）、定义std::promise之后，就必须调用set_value，否则，子线程拿到父线程的std::future变量，进行get的时候，就会跑出异常；
+（2）、std::promise、std::future只能move不能复制拷贝
+（3）、当有多个线程，需要拿到父线程不同的数据执行时，一种方式是构造多个std::future和std::promise，进行多次set_value；
+还有一种方式是使用std::shared_future<int> sf = f.share()；这样sf就可以进行拷贝复制了，这是子线程的参数可以不使用引用传参；同时只需要一次set_value。
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+    std::shared_future<int> sf = f.share();
+    std::future<int> fu1 = std::async(std::launch::deferred, factorial, sf);
+    std::future<int> fu2 = std::async(std::launch::deferred, factorial, sf);
+    std::future<int> fu3 = std::async(std::launch::deferred, factorial, sf);
+    std::future<int> fu4 = std::async(std::launch::deferred, factorial, sf);
+    p.set_value(4);
+    int x1 = fu1.get();
+    int x2 = fu2.get();
+    int x3 = fu3.get();
+    int x4 = fu4.get();
+
+    std::cout << "Get from child is: " << x1 << std::endl;
+    std::cout << "Get from child is: " << x2 << std::endl;
+    std::cout << "Get from child is: " << x3 << std::endl;
+    std::cout << "Get from child is: " << x4 << std::endl;
+
+
 */
 
