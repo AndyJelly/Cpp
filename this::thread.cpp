@@ -203,6 +203,25 @@ void function3()
     std::cout << "Get from child is: " << x3 << std::endl;
     std::cout << "Get from child is: " << x4 << std::endl;
 
+五、std::packaged_task
+int factorial(int N)
+{
+    int res = 1;
+   
+    for (int i = N; i > 1; --i)
+    {
+        res *= i;
+    }
+    std::cout << "Result is: " << res << std::endl;
+    return res;
 
+}
+
+std::packaged_task<int()> t(std::bind(factorial,6));      
+    //可以异步获取，可调用对象的执行结果(不用限制只能从父线程中获取子线程的执行结果，可以是两个完全不相干的线程)
+    //创建时只能传递一个参数，如果可调用对象需要传递参数时，可以使用std::bind获取一个函数对象
+
+    std::future<int> ret = t.get_future();
+    int value = ret.get();          //等待任务执行完成并获取结果
 */
 
