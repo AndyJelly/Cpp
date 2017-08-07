@@ -1,5 +1,5 @@
 // assertDemo.cpp : 定义控制台应用程序的入口点。
-//
+//magnet:?xt=urn:btih:2D11F1BD4FDA2A759F0E2F230C86E23F9B1364F3
 
 #include "stdafx.h"
 // crt_set_error_mode.c
