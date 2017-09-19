@@ -1,0 +1,25 @@
+系统运行级别
+ runlevel  查看系统的运行级别
+init 级别号   设置系统运行级别
+init 0   关机
+init 6   重启
+
+/etc/inittab  文件中可以设置初始运行级别
+
+独立服务  每个服务占用独立的内存空间
+xinetd服务   超级守护进程    只有xinetd服务占内存，其挂安利的服务并不占内存
+
+yum -y install xinetd   安装xinetd服务
+
+chkconfig --list  列出系统已安装的服务
+其中0-6表示的是不同运行级别时的开启和关闭状态
+
+vi /etc/services  查看所有端口与服务对应关系
+
+netstat -tulnp  
+-t  列出TCP数据
+-u  列出UDP数据
+-l   列出正在监听的网络服务
+-n  用端口号来显示服务，而不是用服务名
+-p  列出该服务的进程ID
+-a  列出所有状态
