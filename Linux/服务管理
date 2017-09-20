@@ -1,3 +1,5 @@
+http://blog.csdn.net/tangsilian/article/details/52145766
+
 系统运行级别
  runlevel  查看系统的运行级别
 init 级别号   设置系统运行级别
@@ -23,3 +25,12 @@ netstat -tulnp
 -n  用端口号来显示服务，而不是用服务名
 -p  列出该服务的进程ID
 -a  列出所有状态
+
+
+源码包的启动和自启动
+只能通过绝对路径找到对应服务的启动程序然后执行
+通过编辑  /etc/rc.c/rc/local 文件，在其中添加服务启动命令，就可以实现服务自动
+
+
+service  chkconfig  ntsysv 等命令都是依赖于rpm包的安装位置，对于源码安装的服务来说无效
+centos7 以后service命令改为systemctl
