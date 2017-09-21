@@ -45,9 +45,56 @@ http://www.cnblogs.com/zengguowang/p/5687499.html
 
 
 
+/////////////////////////////////////////////////////////////////
+sudo权限
+sudo的操作对象是系统命令
 
+修改/etc/sudoers文件，或者执行visudo命令，修改那些用户拥有root用户某些权限
+user1 ALL=(ALL)  /sbin/sutdown -r now
+第一个ALL 表示用户user1在那些主机上可以拥有root的命令；
+第二个ALL 可使用的身份，可以不写，一般都写成ALL 
+最后的命令，表示可以拥有root的哪些命令权限
 
+%group1 ALL=(ALL)  /sbin/sutdown -r now
+组名前面加%，表示给用户组赋予root权限
 
+root用户通过 su - user1  切换用户
+普通用户 sudo -l可以查看，该用户具有哪些root权限
+
+用户user1可以设置密码，但是密码不可以为空，不可以为root用户设置密码
+user1 ALL=/usr/bin/passwd [A-Za-z]*, !/usr/bin/passwd "", !/usr/bin/passwd root
+
+whereis 命令   可以查看命令运行文件在哪个目录下
+
+/////////////////////////////////////////////////////////////////////////////////////
+SetUID权限
+只有执行文件才可以设置SUID权限
+文件的权限中带有s表示该文件具有UID权限，即普通用户在执行该命令时，是可以自动切换成该文件所有者的身份去执行该命令
+设置UID权限
+chmod 4755 文件名
+其中4代表UID
+或者chmod u+s 文件名
+
+取消SUID权限
+chmod 0755 文件名
+chmod u-s 文件名
+
+ll /usr/bin/passwd
+-rwsr-xr-x 
+用户在执行passwd命令时，只能修改自己的密码，不能修改其他用户的密码；
+用户的密码存放在/etc/shadow文件中，只有root用户有权限查看；
+普通用户执行passwd命令时，其实是在使用root与用户执行passwd命令；同时，普通用户执行passwd命令时，后面不能加任何用户名，包括自己
+
+chmod  u+s  文件名   SUID
+chmod  g+s  文件名   SGID
+chmod  o+s  文件名
+
+查看系统中自带的具有SUID权限的命令
+find / -perm -4000 -o -perm -2000 > suid.log
+
+SetGID
+/usr/bin/locate 命令
+查询/ver/lib/mlocate/mlocate.db数据库
 
 
 
