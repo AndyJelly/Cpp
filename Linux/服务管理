@@ -27,6 +27,18 @@ netstat -tulnp
 -a  列出所有状态
 
 
+独立服务的启动：
+（1）、/etc/init.d/独立服务名
+start|stop|status|restart
+(2)、service 独立服务名
+start|stop|status|restart
+只能启动rpm包安装的服务，源码包安装的服务无法启动，根本原因是服务的安装位置不同
+
+独立服务的自启动
+（1）、修改配置文件 /etc/rc.d/rc.local
+（2）、chkconfig [--level 运行级别] [独立服务名] [on|off]
+ (3)、通过ntsysv命令
+
 源码包的启动和自启动
 只能通过绝对路径找到对应服务的启动程序然后执行
 通过编辑  /etc/rc.c/rc/local 文件，在其中添加服务启动命令，就可以实现服务自动
